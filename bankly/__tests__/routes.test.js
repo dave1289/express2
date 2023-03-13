@@ -56,6 +56,7 @@ describe("POST /auth/register", function() {
     expect(admin).toBe(false);
   });
 
+
   test("should not allow a user to register with an existing username", async function() {
     const response = await request(app)
       .post("/auth/register")
@@ -73,7 +74,27 @@ describe("POST /auth/register", function() {
       message: `There already exists a user with username 'u1'`
     });
   });
+
+//   BUG #1 need to check lowercase usernames to avoid capitalization allowing dupes
+  test("should not allow a user to register with an existing username even with capitalization", async function() {
+   const response = await request(app)
+     .post("/auth/register")
+     .send({
+       username: "U1",
+       password: "pwd1",
+       first_name: "new_first",
+       last_name: "new_last",
+       email: "new@newuser.com",
+       phone: "1233211221"
+     });
+   expect(response.statusCode).toBe(400);
+   expect(response.body).toEqual({
+     status: 400,
+     message: `There already exists a user with username 'U1'`
+   });
+ });
 });
+
 
 describe("POST /auth/login", function() {
   test("should allow a correct username/password to log in", async function() {
@@ -90,6 +111,22 @@ describe("POST /auth/login", function() {
     expect(username).toBe("u1");
     expect(admin).toBe(false);
   });
+
+//   bug #2 login with capitalized username functionality
+  test("should allow a correct username/password to log in with capitalized username", async function() {
+   const response = await request(app)
+     .post("/auth/login")
+     .send({
+       username: "U1",
+       password: "pwd1"
+     });
+   expect(response.statusCode).toBe(200);
+   expect(response.body).toEqual({ token: expect.any(String) });
+
+   let { username, admin } = jwt.verify(response.body.token, SECRET_KEY);
+   expect(username).toBe("U1");
+   expect(admin).toBe(false);
+ });
 });
 
 describe("GET /users", function() {

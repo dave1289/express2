@@ -7,13 +7,13 @@ const { BCRYPT_WORK_FACTOR } = require("../config");
 class User {
 
 /** Register user with data. Returns new user data. */
-
+   // BUG #1 make sure to change all usernames toLowerCase() so we can properly check for dupes
   static async register({username, password, first_name, last_name, email, phone}) {
     const duplicateCheck = await db.query(
       `SELECT username 
         FROM users 
         WHERE username = $1`,
-      [username]
+      [username.toLowerCase()]
     );
 
     if (duplicateCheck.rows[0]) {
